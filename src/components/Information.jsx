@@ -2,8 +2,35 @@ import React, { useState } from "react";
 import Transcription from "./Transcription";
 import Translation from "./Translation";
 
-function Information() {
+function Information(props) {
+  const { output } = props;
   const [tab, setTab] = useState("transcription");
+  const [translation, setTranslation] = useState(null);
+  const [translating, setTranslating] = useState(null);
+  const [toLanguage, setToLanguage] = useState("Select Language");
+
+  function handleCopy() {
+    navigator.clipboard.writeText();
+  }
+
+  function handleDownload() {
+    const element = document.createElement("a");
+    const file = new Blob([], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download(`Verbasync_${new Date().toDateString()}.txt`);
+    document.body.appendChild(element);
+    element.click();
+  }
+
+  function generateTranslation() {
+    if (translating || toLanguage === "Select Language") {
+      return;
+    }
+  }
+
+  const textElement =
+    tab === "transcription" ? output.map((val) => val.text) : "";
+
   return (
     <main className="flex-1 p-4 flex flex-col text-center gap-3 sm:gap-4 justify-center pb-20 max-w-prose w-full mx-auto">
       <h1 className="font-semibold text-5xl sm:text-6xl md:text-7xl ">
@@ -15,10 +42,10 @@ function Information() {
             setTab("transcription");
           }}
           className={
-            "px-4 py-2 duration-200 font-medium " +
+            "px-4 py-2 duration-200  " +
             (tab === "transcription"
-              ? "bg-blue-400 text-white"
-              : "text-blue-400 hover:text-blue-600")
+              ? "bg-blue-300 text-white"
+              : "text-blue-300 hover:text-blue-600")
           }
         >
           Transcription
@@ -37,7 +64,37 @@ function Information() {
           Translation
         </button>
       </div>
-      {tab === "transcription" ? (<Transcription />) : (<Translation />)}
+      <div className=" my-8 flex flex-col ">
+        {tab === "transcription" ? (
+          <Transcription {...props} textElement={textElement} />
+        ) : (
+          <Translation
+            {...props}
+            textElement={textElement}
+            toLanguage={toLanguage}
+            translating={translating}
+            // setTranslation={setTranslation}
+            // setTranslating={setTranslating}
+            setToLanguage={setToLanguage}
+            generateTranslation={generateTranslation}
+          />
+        )}
+
+        <div className="my-8 flex items-center gap-4 mx-auto">
+          <button
+            title="Copy"
+            className="bg-white hover:text-blue-600 duration-200  text-blue-300 aspect-square grid-items-center  p-2 rounded px-3"
+          >
+            <i className="fa-solid fa-copy"></i>
+          </button>
+          <button
+            title="Download"
+            className="bg-white hover:text-blue-600 duration-200 text-blue-300 aspect-square grid-items-center  p-2 rounded px-3"
+          >
+            <i className="fa-solid fa-download"></i>
+          </button>
+        </div>
+      </div>
     </main>
   );
 }

@@ -1,11 +1,12 @@
-import React from 'react'
+import React from "react";
 
-function Transcription() {
+function Transcription(props) {
+  const { textElement } = props;
   return (
     <div>
-      Transcription
+      <h1>{textElement}</h1>
     </div>
-  )
+  );
 }
 
-export default Transcription
+export default Transcription;

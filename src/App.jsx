@@ -24,17 +24,17 @@ function App() {
 
   useEffect(() => {
     if (!worker.current) {
-      //Worker for ML model to work
       worker.current = new Worker(
-        new URL("./utils/whispher.worker.js", import.meta.url, {
+        new URL("./utils/whispher.worker.js", import.meta.url),
+        {
           type: "module",
-        })
+        }
       );
     }
 
-    // conditions for ML
     const onMessageReceived = async (e) => {
-      switch (e?.data?.type) {
+      // console.log(e.data)
+      switch (e.data.type) {
         case "DOWNLOADING":
           setDownloading(true);
           console.log("DOWNLOADING");
@@ -45,45 +45,46 @@ function App() {
           break;
         case "RESULT":
           setOutput(e.data.results);
-          console.log("RESULT");
+          console.log(e.data.results);
           break;
         case "INFERENCE_DONE":
           setFinished(true);
-          console.log("INFERENCE DONE");
+          console.log("DONE");
           break;
         default:
           break;
       }
     };
-    worker.current.addEventListener('message',onMessageReceived)
 
-    return ()=>{
-      worker.current.removeEventListener('message',onMessageReceived)
-    }
-  }, []);
+    worker.current.addEventListener("message", onMessageReceived);
+
+    return () =>
+      worker.current.removeEventListener("message", onMessageReceived);
+  });
 
   // getting audio buffer from the file
   async function readAudioFrom(file) {
-    const sampling_rate=16000
-    const audioContext=new AudioContext({sampleRate:sampling_rate})
-    const response= await file.arrayBuffer()
-    const decode = await audioContext.decodeAudioData(response)
-    const audio = decode.getChannelData(0)
-    return audio
+    const sampling_rate = 16000;
+    const audioCTX = new AudioContext({ sampleRate: sampling_rate });
+    const response = await file.arrayBuffer();
+    const decoded = await audioCTX.decodeAudioData(response);
+    const audio = decoded.getChannelData(0);
+    return audio;
   }
 
-  async function  handleFormSubmission() {
-    if(!file && !audioStream)
-      return
-    let audio= await readAudioFrom(file?file:audioStream)
+  async function handleFormSubmission() {
+    if (!file && !audioStream) {
+      return;
+    }
 
-    const modelName=`openai/whisper-tiny.en`
+    let audio = await readAudioFrom(file ? file : audioStream);
+    const model_name = `openai/whisper-tiny.en`;
 
     worker.current.postMessage({
-      type:MessageTypes.INFERENCE_REQUEST,
+      type: MessageTypes.INFERENCE_REQUEST,
       audio,
-      modelName
-    })
+      model_name,
+    });
   }
 
   return (
@@ -92,12 +93,12 @@ function App() {
         {/* page rendering based on requirements */}
         <Header />
         {output ? (
-          <Information />
+          <Information output={output} />
         ) : loading ? (
           <Transcribing />
         ) : isAudioAvailable ? (
           <FileDisplay
-          handleFormSubmission={handleFormSubmission}
+            handleFormSubmission={handleFormSubmission}
             handleAudioReset={handleAudioReset}
             file={file}
             audioStream={audioStream}
